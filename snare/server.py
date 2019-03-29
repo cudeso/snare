@@ -9,6 +9,7 @@ import jinja2
 from snare.middlewares import SnareMiddleware
 from snare.tanner_handler import TannerHandler
 
+import datetime
 
 class HttpRequestHandler():
     def __init__(self, meta, run_args, snare_uuid, debug=False, keep_alive=75, **kwargs):
@@ -48,6 +49,13 @@ class HttpRequestHandler():
 
         # Submit the event to the TANNER service
         event_result = await self.tanner_handler.submit_data(data)
+
+        # Log the event to JSON if enabled
+        if self.run_args.log_json == True:
+            data_json = data
+            data_json['timestamp'] = ("%s" % datetime.datetime.now())
+            self.run_args.logger_json_f.write(json.dumps(data_json) + "\n")
+            self.run_args.logger_json_f.flush()
 
         # Log the event to slurp service if enabled
         if self.run_args.slurp_enabled:
